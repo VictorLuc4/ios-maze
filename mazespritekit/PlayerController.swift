@@ -49,7 +49,8 @@ class PlayerController: PlayerControllerDelegate {
         let spriteName = "player\(playerNumber)"
         playerSpriteNode = SKSpriteNode(imageNamed: spriteName)
         
-        guard let position = playerPosition[playerNumber] else { return }
+        let allPosition = getPlayerPosition(from: CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height))
+        guard let position = allPosition[playerNumber] else { return }
         
         let textureAtlas = SKTextureAtlas(named: "Run Player \(playerNumber)")
         

@@ -35,6 +35,26 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     override func didMove(to view: SKView) {
         
+        // tillemapnodegrass
+        
+        var tilenode = SKTileMapNode()
+        for node in self.children {
+            if node.name == "grassnode" {
+                tilenode = node as! SKTileMapNode
+            }
+        }
+/*
+        let tileSet = SKTileSet(named: "grass-tile")!
+        let tileSize = CGSize(width: 10, height: 110)
+        let columns = 128
+        let rows = 128
+        let waterTiles = tileSet.tileGroups.first { $0.name == "grass" }
+        let bottomLayer = SKTileMapNode(tileSet: tileSet, columns: columns, rows: rows, tileSize: tileSize)
+        bottomLayer.fill(with: waterTiles)
+        map.addChild(bottomLayer)
+  */
+        
+        
         // Handle Socket
         self.playerId = NSUUID().uuidString
         
@@ -67,10 +87,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             
             guard let currentPlayer = self.allPlayers[id] else { return }
             currentPlayer.sprite.removeFromParent()
+            
             // Removing disconnected player's sprite
             self.allPlayers[id] = nil
         })
-        
+
         socket?.on("some_player_move", callback: { data, ack  in
             print("someone move")
             guard let dict = data[0] as? NSDictionary else {return}
@@ -89,6 +110,18 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             let direction = CGVector(dx: x, dy: y)
             player.run(direction: direction, velocity: velocity)
         })
+        
+        socket?.on("game_finished", callback: { data, ack  in
+            guard let players = data[0] as? [NSDictionary] else { return }
+            // Les joueurs sont triés par ordre d'arrivée
+            let winner = players[0] as NSDictionary
+            
+            if let winnerId = winner["id"] {
+                // Retrouver son sprite puis afficher en plein ecran
+            }
+            print("Le gagnant est: Player \(String(describing: winner["number"]))")
+        })
+        
         socket?.connect()
         
         // set up game
@@ -135,8 +168,17 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         print("A : \(A.categoryBitMask) \n B :\(B.categoryBitMask)")
         
-        if ((A.categoryBitMask == 1 && B.categoryBitMask == 3) || (A.categoryBitMask == 3 && B.categoryBitMask == 1)){
+        if ((A.categoryBitMask > 100 && B.categoryBitMask == 3) || (A.categoryBitMask == 3 && B.categoryBitMask > 100)){
             print("End Scene")
+            if A.categoryBitMask > 100 {
+                contact.bodyA.node?.physicsBody = nil
+            } else {
+                contact.bodyB.node?.physicsBody = nil
+            }
+            let secondScene = ModeScene(fileNamed: "ModeScene")
+            let transition = SKTransition.flipVertical(withDuration: 1.0)
+            secondScene?.scaleMode = .aspectFill
+            scene?.view?.presentScene(secondScene!, transition: transition)
         }
     }
     
