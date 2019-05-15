@@ -1,0 +1,52 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Socket.IO chat</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font: 13px Helvetica, Arial; }
+      form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
+      form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
+      form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+      #messages { list-style-type: none; margin: 0; padding: 0; }
+      #messages li { padding: 5px 10px; }
+      #messages li:nth-child(odd) { background: #eee; }
+    </style>
+  </head>
+  <body>
+    <ul id="messages"></ul>
+    <form action="">
+      <input id="m" autocomplete="off" /><button>Send</button>
+    </form>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      var socket = io();
+      socket.emit('player_login', {
+        id: `player${Math.round(Math.random() * 10)}`,
+        x: 0,
+        y: 0
+      });
+
+      socket.emit('player_move', {
+        id: 'toto',
+        x: 0,
+        y: 0
+      });
+
+      socket.on('some_player_move', function(player) {
+        console.log('someone moved');
+        console.log(player);
+      })
+
+      socket.on('player_logged_in', function(player) {
+        console.log('someone logged into my game');
+        console.log(player);
+      })
+
+      socket.on('player_disconnected', function(player) {
+        console.log('someone disconnected');
+        console.log(player);
+      });
+    </script>
+  </body>
+</html>
