@@ -46,37 +46,50 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         })
         
         socket?.on("player_logged_in", callback: { data, ack  in
+            print("A Player logged in")
             print(data)
             
             guard let dict = data[0] as? NSDictionary else {return}
             
-            guard let id = dict["id"] else {return}
-            guard let number = dict["number"] else {return}
+            for (_, player) in dict {
+                guard let p = player as? NSDictionary else { continue }
+                guard let id = p["id"] else { continue }
+                guard let number = p["number"] else { continue }
+                
+                self.createPlayer(playerId: id as! String, number: number as! Int)
+            }
+        })
+        
+        socket?.on("player_disconnected", callback: { data, ack in
+            print("someone disconnected")
+            guard let player = data[0] as? NSDictionary else { return }
+            guard let id = player["id"] as? String else { return }
             
-            self.createPlayer(playerId: id as! String, number: number as! Int)
+            guard let currentPlayer = self.allPlayers[id] else { return }
+            currentPlayer.sprite.removeFromParent()
+            // Removing disconnected player's sprite
+            self.allPlayers[id] = nil
         })
         
         socket?.on("some_player_move", callback: { data, ack  in
-            print(data)
+            print("someone move")
             guard let dict = data[0] as? NSDictionary else {return}
             
             guard let id = dict["id"] as? String else {return}
             if id == self.playerId {return}
+            print("someone moved")
             guard let x = dict["x"] as? Double else {return}
             guard let y = dict["y"] as? Double else {return}
+            guard let velocityX = dict["velocityX"] as? Double else { return }
+            guard let velocityY = dict["velocityY"] as? Double else { return }
             
-            let point = CGPoint(x: x, y: y)
+            let velocity = CGVector(dx: velocityX, dy: velocityY)
             guard let player = self.allPlayers[id] else { return }
             
-            
+            let direction = CGVector(dx: x, dy: y)
+            player.run(direction: direction, velocity: velocity)
         })
-        
-        
         socket?.connect()
-        
-        
-
-    
         
         // set up game
         self.physicsWorld.contactDelegate = self
@@ -91,7 +104,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             let runDirection = CGVector(dx:CGFloat(Float(roll!)) , dy: CGFloat(Float(-1 * pit!)))
             guard let player = self.allPlayers[self.playerId] else {return}
             player.run(direction: runDirection, velocity: self.velocity!)
-            self.socket?.emit("player_move",["id":self.playerId,"x":runDirection.dx,"y":runDirection.dy])
+            // TODO: Le calcul à la réception n'est pas bon car il s'agit d'un vecteur et non d'un POINT dans l'espace, il faut revoir notre calcul
+            self.socket?.emit("player_move", ["id":self.playerId,"x":runDirection.dx,"y":runDirection.dy, "velocityX": self.velocity?.dx, "velocityY": self.velocity?.dy])
         }
         manager.startAccelerometerUpdates(to: OperationQueue.main){ data,error in
             self.velocity = CGVector(dx: (data?.acceleration.x)! * 360, dy: (data?.acceleration.y)! * 360)
@@ -102,13 +116,18 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         if let existingPlayer = self.allPlayers[playerId] {
             return
         }
-        guard let position = playerPosition[number] else {return}
-        self.allPlayers[playerId] = PlayerController()
-        guard let player = self.allPlayers[playerId] else {return}
-        player.setUpPlayerSprite(frame: frame, position: position ,withCallback: {
+        self.allPlayers[playerId] = PlayerController(frame: frame, playerNumber: number , callback: {
             sprite in
             addChild(sprite)
         })
+        
+        // TODO: Remove the following content -> Used to dev on a simulator as CoreMotion does not work...
+        
+        let runDirection = CGVector(dx: 1 , dy: -1)
+        guard let player = self.allPlayers[self.playerId] else {return}
+        let velocit = CGVector(dx: 0.2, dy: 0.2)
+        player.run(direction: runDirection, velocity: velocit)
+        self.socket?.emit("player_move", ["id":self.playerId,"x":runDirection.dx,"y":runDirection.dy, "velocityX": velocit.dx, "velocityY": velocit.dy])
     }
     
     func didBegin(_ contact: SKPhysicsContact) {
