@@ -121,13 +121,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             addChild(sprite)
         })
         
-        // TODO: Remove the following content -> Used to dev on a simulator as CoreMotion does not work...
-        
-        let runDirection = CGVector(dx: 1 , dy: -1)
-        guard let player = self.allPlayers[self.playerId] else {return}
-        let velocit = CGVector(dx: 0.2, dy: 0.2)
-        player.run(direction: runDirection, velocity: velocit)
-        self.socket?.emit("player_move", ["id":self.playerId,"x":runDirection.dx,"y":runDirection.dy, "velocityX": velocit.dx, "velocityY": velocit.dy])
+        // TODO: Remove the following content -> Used to dev on a simulator as CoreMotion does not work...        
+//        let runDirection = CGVector(dx: 1 , dy: -1)
+//        guard let player = self.allPlayers[self.playerId] else {return}
+//        let velocit = CGVector(dx: 0.2, dy: 0.2)
+//        player.run(direction: runDirection, velocity: velocit)
+//        self.socket?.emit("player_move", ["id":self.playerId,"x":runDirection.dx,"y":runDirection.dy, "velocityX": velocit.dx, "velocityY": velocit.dy])
     }
     
     func didBegin(_ contact: SKPhysicsContact) {
