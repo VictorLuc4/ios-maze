@@ -16,8 +16,8 @@ class PlayerController: PlayerControllerDelegate {
         return playerSpriteNode
     }
     
-    func setUpPlayerSprite(frame: CGRect, withCallback cb: (SKSpriteNode) -> Void) {
-        playerSpriteNode.position = CGPoint(x: frame.midX - 1, y: frame.midY - 1 )
+    func setUpPlayerSprite(frame: CGRect, position:CGPoint, withCallback cb: (SKSpriteNode) -> Void) {
+        playerSpriteNode.position = position
         playerSpriteNode.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: 60, height: 60))
         playerSpriteNode.physicsBody?.isDynamic = true
         playerSpriteNode.physicsBody?.allowsRotation = false
@@ -56,5 +56,5 @@ class PlayerController: PlayerControllerDelegate {
 protocol PlayerControllerDelegate {
     var sprite: SKSpriteNode { get }
     func run(direction: CGVector, velocity: CGVector)
-    func setUpPlayerSprite(frame: CGRect, withCallback cb: (SKSpriteNode) -> Void)
+    func setUpPlayerSprite(frame: CGRect, position:CGPoint, withCallback cb: (SKSpriteNode) -> Void)
 }
