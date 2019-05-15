@@ -37,6 +37,30 @@ io.on('connection', function(socket){
     io.emit('player_logged_in', players);
   });
 
+  socket.on('player_finish', function(player) {
+    // save date of arrival for player if it exists and if it did not finish the race yet
+    if (!player || !player.id || !players[player.id] || players[player.id].finishedAt) return;
+    players[player.id] = Object.assign(players[player.id], player, { finishedAt: Date.now() });
+
+    // check if all players finished the race
+    let i = 0;
+    let allFinished = true;
+    const playersArray = Object.values(players);
+    do {
+      const currentPlayer = playersArray[i];
+      if (!currentPlayer.finishedAt) allFinished = false;
+      i++;
+    } while(i < playersArray.length || allFinished);
+
+    if (allFinished) {
+      // Sort players -> Time of finish line
+      playersArray.sort(function(a,b){
+        return b.finishedAt - a.finishedAt;
+      });
+      io.emit('game_finished', playersArray);
+    }
+  });
+
   socket.on('disconnect', function() {
     // Find and remove delete player
     console.log('a Player disconnected')
