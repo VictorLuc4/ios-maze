@@ -17,20 +17,24 @@ io.on('connection', function(socket){
   console.log('user connected to socket');
 
   socket.on('player_move', function(player) {
+    console.log('someone moved');
     if (!player.id || !players[player.id]) return;
     const currentPlayer = players[player.id];
     players[player.id] = Object.assign({}, currentPlayer, player);
     // Emit to other players
-    socket.emit('some_player_move', players[player.id]);
+    io.emit('some_player_move', players[player.id]);
   })
 
   // When a player logs in to the room
   socket.on('player_login', function(player) {
+    console.log('someone is logging in')
+	  console.log(player);	  
     if (!player.id || players[player.id]) return;
-    players[player.id] = Object.assign(initialPlayer, player, { socketId: socket.conn.id, number: Object.values(players).length + 1 });
+    let playerNumber = findPlayerNumber();
+    players[player.id] = Object.assign(initialPlayer, player, { socketId: socket.conn.id, number: playerNumber });
     console.log('A Player has logged in')
     console.log(players);
-    socket.emit('player_logged_in', players[player.id]);
+    io.emit('player_logged_in', players);
   });
 
   socket.on('disconnect', function() {
@@ -40,9 +44,20 @@ io.on('connection', function(socket){
     if (!disconnectedPlayer || !disconnectedPlayer.id || !players[disconnectedPlayer.id]) return;
     delete players[disconnectedPlayer.id];
     console.log('A player disconnected');
-    socket.emit('player_disconnected', disconnectedPlayer);
+    io.emit('player_disconnected', disconnectedPlayer);
   });
 });
+
+const findPlayerNumber = () => {
+  let playerNumber = 1;
+  while (true) {
+    const player = Object.values(players).find(p => p.number === playerNumber);
+    if (!player) {
+      return playerNumber;
+    }
+    playerNumber++;
+  }
+}
 
 http.listen(3000, function(){
   console.log('listening on *:3000');
