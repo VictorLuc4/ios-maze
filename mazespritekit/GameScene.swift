@@ -40,11 +40,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             let roll = self.manager.deviceMotion?.attitude.roll // roulade
             
             let runDirection = CGVector(dx:CGFloat(Float(roll!)) , dy: CGFloat(Float(-1 * pit!)))
-            self.playerDelegate.run(direction: runDirection)
             
+            self.playerDelegate.run(direction: runDirection, velocity: self.velocity!)
         }
         manager.startAccelerometerUpdates(to: OperationQueue.main){ data,error in
-            self.velocity = CGVector(dx: (data?.acceleration.x)! * 2.5, dy: (data?.acceleration.y)! * 2.5)
+            self.velocity = CGVector(dx: (data?.acceleration.x)! * 360, dy: (data?.acceleration.y)! * 360)
         }
     }
     
