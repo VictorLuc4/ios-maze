@@ -56,8 +56,19 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             self.createPlayer(playerId: id as! String, number: number as! Int)
         })
         
-        socket?.on("", callback: { data, ack  in
+        socket?.on("some_player_move", callback: { data, ack  in
             print(data)
+            guard let dict = data[0] as? NSDictionary else {return}
+            
+            guard let id = dict["id"] as? String else {return}
+            if id == self.playerId {return}
+            guard let x = dict["x"] as? Double else {return}
+            guard let y = dict["y"] as? Double else {return}
+            
+            let point = CGPoint(x: x, y: y)
+            guard let player = self.allPlayers[id] else { return }
+            
+            
         })
         
         
@@ -80,6 +91,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             let runDirection = CGVector(dx:CGFloat(Float(roll!)) , dy: CGFloat(Float(-1 * pit!)))
             guard let player = self.allPlayers[self.playerId] else {return}
             player.run(direction: runDirection, velocity: self.velocity!)
+            self.socket?.emit("player_move",["id":self.playerId,"x":runDirection.dx,"y":runDirection.dy])
         }
         manager.startAccelerometerUpdates(to: OperationQueue.main){ data,error in
             self.velocity = CGVector(dx: (data?.acceleration.x)! * 360, dy: (data?.acceleration.y)! * 360)
