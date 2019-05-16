@@ -35,26 +35,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     override func didMove(to view: SKView) {
         
-        // tillemapnodegrass
-        
-        var tilenode = SKTileMapNode()
-        for node in self.children {
-            if node.name == "grassnode" {
-                tilenode = node as! SKTileMapNode
-            }
-        }
-/*
-        let tileSet = SKTileSet(named: "grass-tile")!
-        let tileSize = CGSize(width: 10, height: 110)
-        let columns = 128
-        let rows = 128
-        let waterTiles = tileSet.tileGroups.first { $0.name == "grass" }
-        let bottomLayer = SKTileMapNode(tileSet: tileSet, columns: columns, rows: rows, tileSize: tileSize)
-        bottomLayer.fill(with: waterTiles)
-        map.addChild(bottomLayer)
-  */
-        
-        
         // Handle Socket
         self.playerId = NSUUID().uuidString
         
@@ -111,15 +91,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
             player.run(direction: direction, velocity: velocity)
         })
         
-        socket?.on("game_finished", callback: { data, ack  in
-            guard let players = data[0] as? [NSDictionary] else { return }
+        socket?.on("game_finished", callback: { data, ack in
+            guard let winner = data[0] as? NSDictionary else { return }
+            print(winner)
             // Les joueurs sont triés par ordre d'arrivée
-            let winner = players[0] as NSDictionary
-            
-            if let winnerId = winner["id"] {
-                // Retrouver son sprite puis afficher en plein ecran
-            }
-            print("Le gagnant est: Player \(String(describing: winner["number"]))")
+            self.finishGame(player: winner)
         })
         
         socket?.connect()
@@ -189,6 +165,26 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     override func update(_ currentTime: TimeInterval) {
         // nothing
+    }
+    
+    func finishGame(player: NSDictionary) {
+        // Animate user
+        guard let id = player["id"] as? String else { return }
+        guard let number = player["number"] as? Int else { return }
+        guard let winner = allPlayers[id] else { return }
+        
+        // Place Winner's sprite in the middle of the screen
+        winner.sprite.size = CGSize(width: 250, height: 250)
+        winner.sprite.position = CGPoint(x: frame.midX, y: frame.midY)
+        // Stop Running Animation
+        winner.sprite.removeAllActions()
+        
+        //
+        let label = SKLabelNode(fontNamed: "KirbyNoKiraKizzuBRK")
+        label.text = "The Winner is: Player \(number)"
+        label.fontSize = 50.0
+        label.position = CGPoint(x: frame.midX, y: frame.midY + 130.0)
+        addChild(label)
     }
 
 }
